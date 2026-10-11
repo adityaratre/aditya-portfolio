@@ -90,7 +90,10 @@ function Series() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const closeIntro = useCallback(() => setPlaying(false), []);
+  const stopAudio = useCallback(() => {
+    window.dispatchEvent(new Event('portfolio-audio-stop'));
+  }, []);
+  const closeIntro = useCallback(() => { stopAudio(); setPlaying(false); }, [stopAudio]);
   const openProject = useCallback((nextProject: Project) => {
     window.dispatchEvent(new CustomEvent('portfolio-audio', { detail: 'transition' }));
     setProject(nextProject);
@@ -99,8 +102,8 @@ function Series() {
     window.dispatchEvent(new CustomEvent('portfolio-audio', { detail: 'success' }));
     setResumeOpen(true);
   }, []);
-  const closeProject = useCallback(() => setProject(null), []);
-  const closeResume = useCallback(() => setResumeOpen(false), []);
+  const closeProject = useCallback(() => { stopAudio(); setProject(null); }, [stopAudio]);
+  const closeResume = useCallback(() => { stopAudio(); setResumeOpen(false); }, [stopAudio]);
 
   const sections: Record<SectionId, ReactNode> = {
     about: <About />,
@@ -119,7 +122,7 @@ function Series() {
       <AudioExperience />
 
       <AnimatePresence>
-        {stage === 'opening' && <OpeningSequence key="opening" onDone={() => setStage('profiles')} />}
+        {stage === 'opening' && <OpeningSequence key="opening" onDone={() => { setStage('profiles'); }} />}
         {stage === 'profiles' && <ProfileSelector key="profiles" onPick={pickProfile} />}
       </AnimatePresence>
 
@@ -134,7 +137,7 @@ function Series() {
                 {sections[id]}
               </Scene>
             ))}
-            <FinalCTA onReplay={() => setStage('opening')} />
+            <FinalCTA onReplay={() => { stopAudio(); setStage('opening'); }} />
           </main>
         </motion.div>
       )}

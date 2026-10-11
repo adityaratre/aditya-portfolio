@@ -22,11 +22,25 @@ export default function AudioExperience() {
       });
     };
 
+    const stopAll = () => {
+      (Object.values(effectRefs.current) as Array<HTMLAudioElement | null>).forEach((audio) => {
+        if (!audio) return;
+        audio.pause();
+        audio.currentTime = 0;
+      });
+      openingStarted = false;
+    };
+
     const onSound = (event: Event) => {
       const name = (event as CustomEvent<SoundName>).detail;
       if (!['opening', 'intro', 'transition', 'success'].includes(name)) return;
+      // Never allow two cinematic sounds to overlap.
+      stopAll();
       playSound(name);
     };
+
+    const onStop = () => stopAll();
+    const onPageHide = () => stopAll();
 
     const startOpening = () => {
       if (!openingStarted) playSound('opening');
@@ -35,13 +49,18 @@ export default function AudioExperience() {
     };
 
     window.addEventListener('portfolio-audio', onSound);
+    window.addEventListener('portfolio-audio-stop', onStop);
+    window.addEventListener('pagehide', onPageHide);
     window.addEventListener('pointerdown', startOpening, { once: true });
     window.addEventListener('keydown', startOpening, { once: true });
     const timer = window.setTimeout(() => playSound('opening'), 120);
 
     return () => {
       window.clearTimeout(timer);
+      stopAll();
       window.removeEventListener('portfolio-audio', onSound);
+      window.removeEventListener('portfolio-audio-stop', onStop);
+      window.removeEventListener('pagehide', onPageHide);
       window.removeEventListener('pointerdown', startOpening);
       window.removeEventListener('keydown', startOpening);
     };
