@@ -31,6 +31,13 @@ export default function AudioExperience() {
       openingStarted = false;
     };
 
+    const pauseIntro = () => effectRefs.current.intro?.pause();
+    const resumeIntro = () => {
+      const audio = effectRefs.current.intro;
+      if (!audio) return;
+      void audio.play().catch(() => undefined);
+    };
+
     const onSound = (event: Event) => {
       const name = (event as CustomEvent<SoundName>).detail;
       if (!['opening', 'intro', 'transition', 'success'].includes(name)) return;
@@ -42,17 +49,29 @@ export default function AudioExperience() {
     const onStop = () => stopAll();
     const onPageHide = () => stopAll();
 
+    // Desktop may autoplay; mobile browsers generally require a user gesture.
+    // The first touch/click/key anywhere on the page is therefore the fallback
+    // trigger, so the opening jingle is not tied to the PLAY button.
     const startOpening = () => {
       if (!openingStarted) playSound('opening');
       window.removeEventListener('pointerdown', startOpening);
+      window.removeEventListener('touchstart', startOpening);
+      window.removeEventListener('click', startOpening);
       window.removeEventListener('keydown', startOpening);
     };
 
     window.addEventListener('portfolio-audio', onSound);
     window.addEventListener('portfolio-audio-stop', onStop);
+    window.addEventListener('portfolio-intro-pause', pauseIntro);
+    window.addEventListener('portfolio-intro-resume', resumeIntro);
     window.addEventListener('pagehide', onPageHide);
-    window.addEventListener('pointerdown', startOpening, { once: true });
-    window.addEventListener('keydown', startOpening, { once: true });
+    window.addEventListener('pointerdown', startOpening, { passive: true });
+    window.addEventListener('touchstart', startOpening, { passive: true });
+    window.addEventListener('click', startOpening, { passive: true });
+    window.addEventListener('keydown', startOpening);
+
+    // Try immediately on desktop. If autoplay is blocked, the first gesture above
+    // retries it without requiring the user to press PLAY.
     const timer = window.setTimeout(() => playSound('opening'), 120);
 
     return () => {
@@ -60,8 +79,12 @@ export default function AudioExperience() {
       stopAll();
       window.removeEventListener('portfolio-audio', onSound);
       window.removeEventListener('portfolio-audio-stop', onStop);
+      window.removeEventListener('portfolio-intro-pause', pauseIntro);
+      window.removeEventListener('portfolio-intro-resume', resumeIntro);
       window.removeEventListener('pagehide', onPageHide);
       window.removeEventListener('pointerdown', startOpening);
+      window.removeEventListener('touchstart', startOpening);
+      window.removeEventListener('click', startOpening);
       window.removeEventListener('keydown', startOpening);
     };
   }, []);
@@ -69,9 +92,9 @@ export default function AudioExperience() {
   return (
     <>
       {(['opening', 'transition', 'success'] as SoundName[]).map((name) => (
-        <audio key={name} ref={(node) => { effectRefs.current[name] = node; }} src={`${AUDIO_ROOT}${name}.mp3`} preload="auto" aria-hidden="true" />
+        <audio key={name} ref={(node) => { effectRefs.current[name] = node; }} src={`${AUDIO_ROOT}${name}.mp3`} preload="auto" playsInline aria-hidden="true" />
       ))}
-      <audio ref={(node) => { effectRefs.current.intro = node; }} src={`${AUDIO_ROOT}play-intro.mp3`} preload="auto" aria-hidden="true" />
+      <audio ref={(node) => { effectRefs.current.intro = node; }} src={`${AUDIO_ROOT}play-intro.mp3`} preload="auto" playsInline aria-hidden="true" />
     </>
   );
 }

@@ -19,6 +19,17 @@ export default function PlayIntro({ onClose }: { onClose: () => void }) {
   const [paused, setPaused] = useState(false);
   const progress = useMotionValue(0);
 
+  // Keep the Play Intro audio in lock-step with the reel controls.
+  // The animation can pause independently, so explicitly pause/resume the
+  // soundtrack as well instead of only stopping the progress clock.
+  useEffect(() => {
+    const eventName = paused ? 'portfolio-intro-pause' : 'portfolio-intro-resume';
+    window.dispatchEvent(new Event(eventName));
+    return () => {
+      if (paused) window.dispatchEvent(new Event('portfolio-intro-resume'));
+    };
+  }, [paused]);
+
   useEffect(() => {
     if (phase !== 'zoom') return;
     const t = window.setTimeout(() => setPhase('reel'), 1700);
