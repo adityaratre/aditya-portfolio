@@ -140,7 +140,7 @@ export default function OpeningSequence({ onDone }: { onDone: () => void }) {
             <button
               type="button"
               data-cursor="play"
-              onClick={() => { window.dispatchEvent(new CustomEvent('portfolio-audio', { detail: 'opening' })); onDone(); }}
+              onClick={onDone}
               tabIndex={beat >= 6 ? 0 : -1}
               className="group flex items-center gap-3 rounded-full bg-bone px-9 py-4 font-sans text-base font-bold tracking-wide text-ink shadow-[0_0_60px_rgba(229,19,43,0.45)] transition hover:bg-white"
             >
