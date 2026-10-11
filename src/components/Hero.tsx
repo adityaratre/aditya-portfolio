@@ -37,7 +37,7 @@ export default function Hero({ onPlay, onResume, profileId }: { onPlay: () => vo
   const glowX = useTransform(px, [-1, 1], ['-6%', '6%']);
 
   const meta = [
-    education[0].period.split(' – ')[0].split(' ')[1] + ' – Present',
+    education[0].period.split(' – ')[0] + ' – Present',
     'BBA Student',
     `${projects.length} Originals`,
     `${certifications.length} Certifications`,
